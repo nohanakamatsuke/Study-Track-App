@@ -42,3 +42,28 @@
  .calendar-footer>span{display:none}
  .bottom-caption{display:none}
 }
+
+/* A quiet editor with readable inputs; 16px prevents iPhone focus zoom. */
+#editor{padding:0;width:min(640px,100%);max-height:92dvh;overflow:auto}
+#entry-form{padding:24px}
+#editor .dialog-head{gap:12px;margin-bottom:20px}
+#editor .dialog-head h2{font-size:18px;line-height:1.5}
+#editor .icon-button{min-width:44px;min-height:44px}
+#editor input,#editor [contenteditable]{font-size:16px}
+#editor .session{margin:0 0 12px;gap:8px}
+#editor .session label{font-size:12px}
+#editor .session input{width:100%;min-height:48px;font-variant-numeric:tabular-nums}
+#editor .remove-session{min-width:36px;min-height:44px}
+.time-summary{display:flex;align-items:center;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:16px}
+#add-session{color:var(--accent);font-size:12px;min-height:44px}
+#day-total{font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted)}
+#note-title{width:100%;border:0;padding:10px 0;font-size:20px!important;font-weight:600;background:transparent}
+.note-tools{position:sticky;top:0;z-index:1;background:var(--panel);padding:4px 0;gap:4px}
+.note-tools button{font-size:18px;min-width:44px;min-height:44px}
+.note-tools button[aria-pressed=true]{background:var(--tint);color:var(--accent)}
+#note-body{min-height:240px;outline:none;line-height:1.8;padding:14px 0;overflow-wrap:anywhere;white-space:pre-wrap}
+#note-body:focus-visible{outline:none}
+#note-body p,#note-body div{margin:0}#note-body ul{padding-left:24px;margin:8px 0}#note-body h2,#note-body h3{font-size:20px;margin:12px 0}
+#editor .dialog-actions{position:sticky;bottom:-24px;background:var(--panel);padding:12px 0 max(12px,env(safe-area-inset-bottom));gap:12px}
+#editor .dialog-actions button{min-height:44px;font-size:13px}
+@media(max-width:760px){#editor{border-radius:16px 16px 0 0;margin:auto 0 0;width:100%;max-width:100%;max-height:94dvh}#entry-form{padding:16px}#editor .dialog-actions{bottom:-16px}#editor .dialog-head h2{font-size:17px}#note-body{min-height:220px}}
