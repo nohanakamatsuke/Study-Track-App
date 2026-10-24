@@ -19,3 +19,8 @@ $('#today-label').textContent=new Date().toLocaleDateString('ja',{month:'long',d
 function notePreview(text){return escape(text).split('\n').map(line=>{if(line.startsWith('## '))return '<h3>'+line.slice(3)+'</h3>';if(line.startsWith('- [ ] '))return '<p>☐ '+line.slice(6)+'</p>';if(line.startsWith('- [x] '))return '<p>☑ '+line.slice(6)+'</p>';if(line.startsWith('- '))return '<p>• '+line.slice(2)+'</p>';return '<p>'+line.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')+'</p>';}).join('');}
 document.querySelectorAll('[data-format]').forEach(button=>button.onclick=()=>{const field=$('#note-body');field.hidden=false;$('#note-preview').hidden=true;$('#preview-toggle').textContent='プレビュー';const a=field.selectionStart,b=field.selectionEnd,selection=field.value.slice(a,b),format=button.dataset.format;const insertion=format==='bold'?'**'+(selection||'テキスト')+'**':(a>0&&field.value[a-1]!=='\n'?'\n':'')+({heading:'## ',list:'- ',check:'- [ ] '}[format])+(selection||'テキスト');field.setRangeText(insertion,a,b,'select');field.focus();});
 $('#preview-toggle').onclick=()=>{const preview=$('#note-preview'),show=preview.hidden;preview.innerHTML=notePreview($('#note-body').value);preview.hidden=!show;$('#note-body').hidden=show;$('#preview-toggle').textContent=show?'編集に戻る':'プレビュー';};
+
+// Desktop tools stay visible; on phones they live in a compact settings menu.
+const mobileLayout=matchMedia('(max-width:760px)');
+function syncSettingsMenu(){document.querySelector('.mobile-menu').open=!mobileLayout.matches;}
+mobileLayout.addEventListener('change',syncSettingsMenu);syncSettingsMenu();
