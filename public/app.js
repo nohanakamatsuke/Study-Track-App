@@ -37,7 +37,7 @@ function openEditor(key,focusNote=false){
  selected=key;$('#editor-title').textContent=new Date(key+'T12:00:00').toLocaleDateString('ja',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
  $('#note-body').innerHTML=noteHTML(data[key]?.body||'');$('#sessions').replaceChildren();
  const sessions=data[key]?.sessions||[];(sessions.length?sessions:[{start:'',end:''}]).forEach(addSession);
- fillDuration(totalOf(data[key]));$('#optional-times').open=false;$('#delete').hidden=!data[key];editorSnapshot=editorState();$('#editor').showModal();$('#editor').scrollTop=0;
+ fillDuration(totalOf(data[key]));$('#optional-times').open=false;$('#delete').hidden=!data[key];editorSnapshot=editorState();$('#editor').showModal();document.querySelector('.editor-scroll').scrollTop=0;queueEditorLayout();
  if(focusNote)$('#note-body').focus({preventScroll:true});syncFormatButtons();
 }
 $('#calendar').onclick=e=>{const day=e.target.closest('[data-date]');if(day)openEditor(day.dataset.date);};$('#notes-list').onclick=e=>{const day=e.target.closest('[data-date]');if(day)openEditor(day.dataset.date,true);};$('#calendar-nav').onclick=()=>setView('calendar');$('#notes-nav').onclick=()=>setView('notes');$('#search').oninput=renderNotes;$('#add').onclick=()=>openEditor(keyOf(new Date()));$('#close').onclick=closeEditor;$('#editor').addEventListener('cancel',e=>{e.preventDefault();closeEditor();});$('#editor').onclick=e=>{if(e.target===$('#editor')){const r=$('#editor').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeEditor();}};$('#add-session').onclick=()=>addSession().focus();$('#prev').onclick=()=>changeMonth(-1);$('#next').onclick=()=>changeMonth(1);$('#today').onclick=()=>{month=new Date();month.setDate(1);render();};$('#entry-form').onsubmit=e=>{e.preventDefault();const key=selected;const entry=JSON.parse(editorState());entry.title=entry.title.trim();entry.sessions=entry.sessions.filter(s=>s.start||s.end);const next={...data,[key]:entry};if(persist(next)){$('#editor').close();render();toast('保存しました');}};$('#delete').onclick=()=>{if(confirm('この日の勉強記録とノートを削除しますか？')){const next={...data};delete next[selected];if(persist(next)){$('#editor').close();render();toast('記録を削除しました');}}};
@@ -113,7 +113,41 @@ editor.addEventListener('touchstart',e=>{if(e.touches.length!==1||!e.target.clos
 editor.addEventListener('touchmove',e=>{if(!sheetStart)return;if(e.touches.length!==1){sheetStart=null;editor.style.transform='';return;}const dx=e.touches[0].clientX-sheetStart.x,dy=e.touches[0].clientY-sheetStart.y;if(dy>0&&dy>Math.abs(dx)){e.preventDefault();sheetDrag=dy;editor.style.transform=`translateY(${dy}px)`;}},{passive:false});
 function finishSheet(cancel=false){if(!sheetStart)return;sheetStart=null;editor.style.transform='';if(!cancel&&sheetDrag>80)closeEditor();else if(sheetDrag&&!reduceMotion.matches)editor.animate([{transform:`translateY(${sheetDrag}px)`},{transform:'translateY(0)'}],{duration:180,easing:'ease-out'});sheetDrag=0;}
 editor.addEventListener('touchend',()=>finishSheet(),{passive:true});editor.addEventListener('touchcancel',()=>finishSheet(true),{passive:true});
-function fitEditor(){document.documentElement.style.setProperty('--editor-height',(visualViewport?.height||innerHeight)+'px');}
-visualViewport?.addEventListener('resize',fitEditor);fitEditor();
+// Anchor the sheet to the visible screen, rather than the layout viewport behind
+// Safari's keyboard. Resize and pan notifications are coalesced into one frame.
+const editorScroll=document.querySelector('.editor-scroll'),viewport=window.visualViewport;
+let editorLayoutFrame=0;
+function keepEditorFocusVisible(){
+ if(!editor.open)return;
+ const focused=document.activeElement;let rect;
+ if(focused===noteField){
+  const selection=getSelection();if(!selection.isCollapsed||!selection.rangeCount||!noteField.contains(selection.anchorNode))return;
+  rect=selection.getRangeAt(0).getBoundingClientRect();if(!rect.height)return;
+ }else if(editorScroll.contains(focused))rect=focused.getBoundingClientRect();
+ if(!rect)return;
+ const bounds=editorScroll.getBoundingClientRect(),padding=16;
+ if(rect.bottom>bounds.bottom-padding)editorScroll.scrollTop+=rect.bottom-bounds.bottom+padding;
+ else if(rect.top<bounds.top+padding)editorScroll.scrollTop+=rect.top-bounds.top-padding;
+}
+function queueEditorLayout(){
+ if(editorLayoutFrame)return;
+ editorLayoutFrame=requestAnimationFrame(()=>{
+  editorLayoutFrame=0;if(!editor.open)return;
+  const style=editor.style;
+  style.setProperty('--visible-top',(viewport?.offsetTop||0)+'px');
+  style.setProperty('--visible-left',(viewport?.offsetLeft||0)+'px');
+  style.setProperty('--visible-width',(viewport?.width||innerWidth)+'px');
+  style.setProperty('--visible-height',(viewport?.height||innerHeight)+'px');
+  requestAnimationFrame(keepEditorFocusVisible);
+ });
+}
+viewport?.addEventListener('resize',queueEditorLayout);viewport?.addEventListener('scroll',queueEditorLayout);
+window.addEventListener('resize',queueEditorLayout);
+editor.addEventListener('focusin',queueEditorLayout);
+noteField.addEventListener('input',queueEditorLayout);
+document.addEventListener('selectionchange',()=>{if(editor.open&&document.activeElement===noteField)queueEditorLayout();});
+$('#hide-keyboard').addEventListener('pointerdown',e=>e.preventDefault());
+$('#hide-keyboard').onclick=()=>{rememberSelection();if(editor.contains(document.activeElement))document.activeElement.blur();$('#hide-keyboard').focus({preventScroll:true});};
+editor.addEventListener('close',()=>{editor.style.transform='';sheetStart=null;sheetDrag=0;});
 
 function calendarMarkup(displayMonth){const y=displayMonth.getFullYear(),m=displayMonth.getMonth();const start=new Date(y,m,1-displayMonth.getDay());const cells=Math.ceil((displayMonth.getDay()+new Date(y,m+1,0).getDate())/7)*7;const html=Array.from({length:cells},(_,i)=>{const date=new Date(start);date.setDate(start.getDate()+i);const key=keyOf(date),e=data[key],total=totalOf(e),outside=date.getMonth()!==m;return `<button class="day ${outside?'outside':''} ${key===today?'today':''} ${total?'has-study':''}" data-date="${key}" aria-label="${key}、勉強 ${total} 分${e?.body?'、ノートあり':''}"><span class="date-number">${date.getDate()}</span>${total?`<span class="study-time ${total>=120?'intense':total>=60?'medium':''}">${total}<small>分</small></span>`:''}${e?.body||e?.title?'<span class="note-mark" title="ノートあり">▤</span>':''}</button>`;}).join('');return {html,weeks:cells/7};}

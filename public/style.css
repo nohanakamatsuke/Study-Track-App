@@ -220,3 +220,28 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
  .calendar-toolbar{min-height:44px;padding-top:0;padding-bottom:0}
  .weekdays{padding:4px 0}
 }
+
+/* One scrolling editor, with controls anchored outside it. */
+body{position:fixed;inset:0;width:100%}
+#editor{overflow:hidden;height:min(760px,90dvh);max-height:90dvh;padding:0}
+#editor #entry-form{height:100%;display:flex;flex-direction:column;min-height:0;padding:0;overflow:hidden}
+#editor .sheet-handle{flex:none;height:18px;margin:0}
+#editor .dialog-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 16px 8px;margin:0;border-bottom:1px solid var(--line);min-height:52px}
+.editor-header-actions{display:flex;align-items:center;gap:2px;flex:none}
+.editor-done{min-height:44px;min-width:52px;padding:8px;color:var(--accent);font-size:16px;font-weight:650}
+#editor .icon-button{font-size:25px}
+.editor-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:16px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scroll-padding:16px;overflow-anchor:none}
+#editor .note-editor{min-height:180px}
+#editor #note-body{min-height:180px;padding:12px 0 24px;font-size:16px;line-height:1.8;caret-color:var(--accent);scroll-margin:0}
+#editor .note-tools{flex:none;position:static;display:flex;align-items:center;margin:0;padding:4px 12px max(4px,env(safe-area-inset-bottom));border-top:1px solid var(--line);border-bottom:0;background:var(--panel);min-height:52px;z-index:auto}
+#hide-keyboard{margin-left:auto;font-size:26px;line-height:1;min-width:48px;min-height:44px}
+#editor #delete{min-height:44px;margin-top:12px;padding:8px 0}
+@media(max-width:760px){
+ #editor[open]{position:fixed;inset:auto;top:var(--visible-top,0px);left:var(--visible-left,0px);width:var(--visible-width,100vw);height:var(--visible-height,100dvh);max-width:none;max-height:none;margin:0;border:0;border-radius:0;box-sizing:border-box}
+ #editor .dialog-head{padding-top:env(safe-area-inset-top)}
+ #editor .dialog-head h2{font-size:15px;white-space:nowrap}
+ #editor .sheet-handle{height:14px}
+ .editor-scroll{padding:12px 16px}
+ #editor .duration-inputs{padding-bottom:8px}
+ #editor .duration-inputs input{min-height:48px;font-size:26px}
+}
