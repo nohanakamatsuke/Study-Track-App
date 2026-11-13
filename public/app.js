@@ -122,10 +122,23 @@ function keepEditorFocusVisible(){
  const focused=document.activeElement;let rect;
  if(focused===noteField){
   const selection=getSelection();if(!selection.isCollapsed||!selection.rangeCount||!noteField.contains(selection.anchorNode))return;
-  rect=selection.getRangeAt(0).getBoundingClientRect();if(!rect.height)return;
+  rect=selection.getRangeAt(0).getBoundingClientRect();
+  // WebKit returns an empty rectangle for a caret on an empty line. That is
+  // exactly when a new note must be moved above the newly opened keyboard.
+  if(!rect.height){
+   const anchor=selection.anchorNode;
+   let line=anchor.nodeType===Node.TEXT_NODE?anchor.parentElement:anchor;
+   if(line===noteField&&line.childNodes.length)line=line.childNodes[Math.min(selection.anchorOffset,line.childNodes.length-1)];
+   if(line.nodeType!==Node.ELEMENT_NODE)line=line.parentElement;
+   const box=line.getBoundingClientRect(),style=getComputedStyle(line);
+   const height=parseFloat(style.lineHeight)||parseFloat(style.fontSize)*1.8;
+   const top=box.top+(parseFloat(style.paddingTop)||0);
+   rect={top,bottom:top+height};
+  }
  }else if(editorScroll.contains(focused))rect=focused.getBoundingClientRect();
  if(!rect)return;
  const bounds=editorScroll.getBoundingClientRect(),padding=16;
+ if(focused===noteField&&!noteField.textContent.trim()){editorScroll.scrollTop+=Math.max(0,rect.top-bounds.top-padding);return;}
  if(rect.bottom>bounds.bottom-padding)editorScroll.scrollTop+=rect.bottom-bounds.bottom+padding;
  else if(rect.top<bounds.top+padding)editorScroll.scrollTop+=rect.top-bounds.top-padding;
 }
@@ -138,7 +151,7 @@ function queueEditorLayout(){
   style.setProperty('--visible-left',(viewport?.offsetLeft||0)+'px');
   style.setProperty('--visible-width',(viewport?.width||innerWidth)+'px');
   style.setProperty('--visible-height',(viewport?.height||innerHeight)+'px');
-  requestAnimationFrame(keepEditorFocusVisible);
+  keepEditorFocusVisible();
  });
 }
 viewport?.addEventListener('resize',queueEditorLayout);viewport?.addEventListener('scroll',queueEditorLayout);
