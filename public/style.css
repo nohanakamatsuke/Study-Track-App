@@ -163,3 +163,13 @@ main{margin-left:0}
  .day{padding:2px 5px;gap:1px}
  .study-time{font-size:15px;padding:2px 8px}
 }
+
+/* A small, soft notebook invitation to add today's learning. */
+.time-hero #add{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:8px 16px 8px 9px;border:1px solid #dacfe9;border-radius:18px;background:linear-gradient(115deg,#f0e7ff,#fce8ef);color:#665078;box-shadow:0 4px 12px #8f6a9e20,inset 0 1px 0 #ffffffd9;letter-spacing:.02em;transition:transform .16s,box-shadow .16s}
+.add-note-icon{display:grid;place-items:center;width:30px;height:30px;flex:none;border-radius:11px;background:#ffffffb3;color:#9273b0;box-shadow:0 1px 3px #8f6a9e14}
+.add-note-icon svg{width:23px;height:23px}
+.time-hero #add:hover{filter:none;transform:translateY(-2px);box-shadow:0 7px 16px #8f6a9e30,inset 0 1px 0 #fff}
+.time-hero #add:active{transform:translateY(1px);box-shadow:0 2px 5px #8f6a9e20}
+[data-theme=dark] .time-hero #add{background:linear-gradient(115deg,#443b59,#553f52);border-color:#756280;color:#f5e6fa;box-shadow:0 4px 14px #0002,inset 0 1px 0 #ffffff14}
+[data-theme=dark] .add-note-icon{background:#ffffff12;color:#e0c5ed}
+@media(max-width:760px){.time-hero #add{gap:7px;padding:8px 12px 8px 8px;font-size:12px}}
